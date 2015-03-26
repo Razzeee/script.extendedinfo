@@ -618,11 +618,18 @@ def CompareAlbumWithLibrary(onlinelist):
     return onlinelist
 
 
-def GetStringFromUrl(url=None, headers=False):
+def GetStringFromUrl(url=None, headers=False, requestdata=None):
     succeed = 0
     if not headers:
         headers = {'User-agent': 'XBMC/14.0 ( phil65@kodi.tv )'}
-    request = urllib2.Request(url)
+    if requestdata is None:
+        #do a get
+        request = urllib2.Request(url)
+    else:
+        #do a post
+        log(requestdata)
+        request = urllib2.Request(url, requestdata)
+        log(requestdata)
     for (key, value) in headers.iteritems():
         request.add_header(key, value)
     while (succeed < 5) and (not xbmc.abortRequested):
@@ -637,7 +644,7 @@ def GetStringFromUrl(url=None, headers=False):
     return None
 
 
-def Get_JSON_response(url="", cache_days=7.0, folder=False, headers=False):
+def Get_JSON_response(url="", cache_days=7.0, folder=False, headers=False, requestdata=None):
     now = time.time()
     hashed_url = hashlib.md5(url).hexdigest()
     path = xbmc.translatePath(os.path.join(Addon_Data_Path, hashed_url + ".txt"))
@@ -654,7 +661,7 @@ def Get_JSON_response(url="", cache_days=7.0, folder=False, headers=False):
         results = read_from_file(path)
         log("loaded file for %s. time: %f" % (url, time.time() - now))
     else:
-        response = GetStringFromUrl(url, headers)
+        response = GetStringFromUrl(url, headers, requestdata)
         try:
             results = simplejson.loads(response)
             log("download %s. time: %f" % (url, time.time() - now))

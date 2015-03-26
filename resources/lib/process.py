@@ -242,6 +242,34 @@ def StartInfoActions(infos, params):
                 else:
                     tvshow_id = params.get("id", "")
                 data = GetSimilarTrakt("show", tvshow_id), "SimilarTVShows"
+        elif info == 'usermovieratingtrakt':
+            if params.get("id", False) or params.get("dbid", False):
+                if params.get("dbid", False):
+                    movie_id = GetImdbIDFromDatabase("movie", params["dbid"])
+                else:
+                    movie_id = params.get("id", "")
+                data = GetRatingForMovie(movie_id), "UserMovieRating"
+        elif info == 'usershowratingtrakt':
+            if (params.get("id", "") or params["dbid"]):
+                if params.get("dbid", False):
+                    tvshow_id = GetImdbIDFromDatabase("tvshow", params["dbid"])
+                else:
+                    tvshow_id = params.get("id", "")
+                data = GetRatingForShow(tvshow_id), "UserShowRating"
+        elif info == 'userseasonratingtrakt':
+            if (params.get("id", "") or params["dbid"]) and params.get("season"):
+                if params.get("dbid", False):
+                    tvshow_id = GetImdbIDFromDatabase("tvshow", params["dbid"])
+                else:
+                    tvshow_id = params.get("id", "")
+                data = GetRatingForSeason(tvshow_id, params.get("season")), "UserSeasonRating"
+        elif info == 'userepisoderatingtrakt':
+            if (params.get("id", "") or params["dbid"]) and params.get("season") and params.get("episode"):
+                if params.get("dbid", False):
+                    tvshow_id = GetImdbIDFromDatabase("tvshow", params["dbid"])
+                else:
+                    tvshow_id = params.get("id", "")
+                data = GetRatingForEpisode(tvshow_id, params.get("season"), params.get("episode")), "UserEpisodeRating"
         elif info == 'airingshows':
             data = GetTraktCalendarShows("shows"), "AiringShows"
         elif info == 'premiereshows':

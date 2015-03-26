@@ -10,6 +10,23 @@ headers = {
     'trakt-api-version': 2
 }
 
+def Login():
+    url = 'auth/login'
+    try:
+        username = addon.getSetting("trakt_username")
+        password = addon.getSetting("trakt_password")
+        data = """{"login": "%s","password": "%s"}""" % (username, password)
+
+        results = Get_JSON_response(url=base_url + url, cache_days=0.5, headers=headers, requestdata=data)
+
+    except:
+        log("Error when fetching Trakt data from net")
+        log("Json Query: " + url)
+        results = None
+    if results is not None and results:
+        log(results)
+        headers["trakt-user-login"] = username
+        headers["trakt-user-token"] = results["token"]
 
 def GetTraktCalendarShows(Type):
     shows = []
@@ -177,3 +194,62 @@ def GetSimilarTrakt(mediatype, imdb_id):
     else:
         Notify("Error when fetching info from Trakt.TV")
         return[]
+
+
+def GetRatingForMovie(imdb_id):
+    Login()
+    url = 'sync/ratings/movies'
+    results = Get_JSON_response(base_url + url, headers=headers)
+    if results is not None:
+        return findMovieMatchInList(imdb_id, results, 'imdb')['rating']
+
+
+def GetRatingForShow(imdb_id):
+    Login()
+    url = 'sync/ratings/shows'
+    results = Get_JSON_response(base_url + url, headers=headers)
+    if results is not None:
+        return findShowMatchInList(imdb_id, results, 'imdb')['rating']
+
+
+def GetRatingForSeason(imdb_id, seasonNumber):
+    Login()
+    url = 'sync/ratings/seasons'
+    results = Get_JSON_response(base_url + url, headers=headers)
+    if results is not None:
+        return findSeasonMatchInList(imdb_id, seasonNumber, results, 'imdb')['rating']
+
+
+def GetRatingForEpisode(imdb_id, seasonNumber, episodeNumber):
+    Login()
+    url = 'sync/ratings/episodes'
+    results = Get_JSON_response(base_url + url, headers=headers)
+    if results is not None:
+        return findEpisodeMatchInList(imdb_id, seasonNumber, episodeNumber, results, 'imdb')['rating']
+
+
+def findMovieMatchInList(id, list, idType):
+    return next((item for item in list if  item['movie']['ids'][idType] == id), {})
+
+
+def findShowMatchInList(id, list, idType):
+    return next((item for item in list if  item['show']['ids'][idType] == id), {})
+
+
+def findSeasonMatchInList(id, seasonNumber, list, idType):
+    show = findShowMatchInList(id, list, idType)
+    log("findSeasonMatchInList %s" % show)
+    if 'seasons' in show:
+        for season in show['seasons']:
+            if season['number'] == seasonNumber:
+                return season
+    return {}
+
+
+def findEpisodeMatchInList(id, seasonNumber, episodeNumber, list, idType):
+    season = findSeasonMatchInList(id, seasonNumber, list, idType)
+    if season:
+        for episode in season['episodes']:
+            if episode['number'] == episodeNumber:
+                return episode
+    return {}
